@@ -4,6 +4,10 @@
 //							maintenence, operation, or general UX elements in the
 //							Buckysquares game.
 
+/* Resets the state of the screen by settings all pixels to black.
+ */
+void lcd_clear(void);
+
 /* Opens the main menu of Buckysquares where players can choose
  * which game mode (singleplayer or multiplayer) to play.
  *
@@ -26,3 +30,10 @@ int update_menu(void);
  * Returns: integer flag corresponding to success (0) or failure (-1).
  */
 int is_connected(int id);
+
+/*
+ *
+ */
+void singleplayer_menu(void);
+
+void multiplayer_menu(void);

@@ -4,6 +4,7 @@
 ".\obj\buckysquares.o"
 ".\obj\game_board.o"
 ".\obj\buckysquares_menu.o"
+".\obj\multiplayer.o"
 "..\ece210_api\ece210.lib"
 ".\obj\startup_tm4c123.o"
 ".\obj\system_tm4c123.o"

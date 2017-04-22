@@ -1,5 +1,6 @@
 .\obj\main.o: main.c
 .\obj\main.o: buckysquares.h
+.\obj\main.o: buckysquares_menu.h
 .\obj\main.o: game_board.h
 .\obj\main.o: lab_buttons.h
 .\obj\main.o: ..\peripherals\include\ece210_api.h

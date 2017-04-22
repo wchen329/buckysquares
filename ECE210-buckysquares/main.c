@@ -7,6 +7,7 @@
  * Included Libraries
  *****************************************************************************/
 #include "buckysquares.h"
+#include "buckysquares_menu.h"
 #include "game_board.h"
 #include "lab_buttons.h"
 
@@ -21,13 +22,16 @@
 #define LCD_HALF_SIZE_X	LCD_SIZE_X/2	// X center of screen in pixels
 #define LCD_HALF_SIZE_Y	LCD_SIZE_Y/2	// Y center of screen in pixels
 
+void (* menu_selection[2])();
 
 int main()
 {
 	ece210_initialize_board();
+	menu_selection[0] = singleplayer_menu;
+	menu_selection[1] = multiplayer_menu;
 	
 	while(1){
-		//prompt_menu();	
-		launch_singleplayer();
+		menu_selection[prompt_menu()]();
+		lcd_clear();
 	}	
 }

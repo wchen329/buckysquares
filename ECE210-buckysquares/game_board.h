@@ -3,11 +3,12 @@
 // Description:	Library for functions pertaining to the representation
 //							of the tetris game board.
 
-// Pre-Defined Dimensions
-#define BLOCK_HEIGHT 10				// height of single tetris "block"
-#define BLOCK_LENGTH 10				// length of single tetris "block"
-#define BOARD_HEIGHT 30				// height in BLOCKS (not pixels) of the board 
-#define BOARD_LENGTH 20				// length in BLOCKS (not pixels) of the board
+extern int block_height;		// height of single tetris block in pixels
+extern int block_length;		// length of single tetris block in pixels
+extern int block_start_x;		// the starting x position of a tetris block
+extern int board_height;		// the height of the board in BLOCKS not pixels
+extern int board_length;		// the length of the board in BLOCKS not pixels
+extern int board_offset_x;	// x offset used for centering of the tetris board
 
 /* unit_block Struct
  * Represents a single unit block with an x and y coord
@@ -30,11 +31,6 @@ typedef struct
 	int color;
 } tetris_block;
 
-/* Initializes the tetris board to be empty
- * (all zero values).
- */
-int ** init_board(void);
-
 /* Renders a single unit block on position(x,y) the screen.
  *
  * Accepts arguments:
@@ -44,6 +40,14 @@ int ** init_board(void);
  *	int block_color - the color of the block to render. 0x0 is a random color unless erase is asserted then black is the color
  */
 void block_render(int x, int y, int erase, int block_color);
+
+/* Initializes the tetris board to be empty
+ * (all zero values).
+ *
+ * Accepts arguments:
+ *	int board_size - a flag indicating how big the tetris board should be
+ */
+int ** init_board(int board_size);
 
 /* Renders a given tetris block on the screen.
  * Renders the block in a random ROYGBV color.
@@ -117,3 +121,7 @@ char * unsigned_to_string(unsigned int i);
  * Accepts arguments: char * string - the string to delete
  */
 void delete_string(char * string);
+
+/* Frees up any memory used for the given tetris board.
+ */
+void free_board(int ** board);

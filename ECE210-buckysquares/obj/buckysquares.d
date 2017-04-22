@@ -12,3 +12,5 @@
 .\obj\buckysquares.o: C:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\system_TM4C123.h
 .\obj\buckysquares.o: lab_buttons.h
 .\obj\buckysquares.o: game_board.h
+.\obj\buckysquares.o: multiplayer.h
+.\obj\buckysquares.o: buckysquares_menu.h

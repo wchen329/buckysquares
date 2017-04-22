@@ -11,25 +11,13 @@
 /* The Tetris Board represented as an array of flags
  * 1 at a position represents occupied by block 0 represents not occupied
  */
-int block_array[BOARD_HEIGHT][BOARD_LENGTH];
-
-/* Initializes the tetris board to be empty
- * (all zero values).
- * Return a pointer to the block array.
- */
-int ** init_board()
-{
-	for(int i = 0; i < BOARD_HEIGHT; i++)
-	{
-		for(int j = 0; j < BOARD_LENGTH; j++)
-		{
-			block_array[i][j] = 0;
-			
-		}
-	}
-	
-	return ((int**)(&block_array));
-}
+int ** block_array;
+int block_height = 0;
+int block_length = 0;
+int block_start_x = 0;
+int board_height = 0;
+int board_length = 0;
+int board_offset_x = 0;
 
 /* Renders a single unit block on position(x,y) the screen.
  *
@@ -94,7 +82,50 @@ void block_render(int x, int y, int erase, int block_color)
 	}
 	
 	//Write one block on to the LCD
-	ece210_lcd_draw_rectangle(x * BLOCK_LENGTH + 20, BLOCK_LENGTH, y * BLOCK_HEIGHT, BLOCK_HEIGHT, color);
+	ece210_lcd_draw_rectangle(x * block_length + board_offset_x, block_length, y * block_height, block_height, color);
+}
+
+/* Initializes the tetris board to be empty
+ * (all zero values).
+ * Return a pointer to the block array.
+ */
+int ** init_board(int board_size)
+{
+	switch(board_size)
+	{
+		case 0:
+			block_height = 16;
+			block_length = 16;
+			board_height = 18;
+			board_length = 10;
+			break;
+		case 1:
+			block_height = 10;
+			block_length = 10;
+			board_height = 30;
+			board_length = 20;
+			break;
+	}
+	
+	board_offset_x = (240 - (block_length * board_length))/2;
+	block_start_x = board_length / 2;
+	block_array = malloc(board_height * sizeof(int*));
+	
+	for(int dec_itr = 0; dec_itr < board_height; dec_itr++)
+	{
+		*(block_array + dec_itr) = malloc(board_length * sizeof(int));
+	}
+	
+	for(int i = 0; i < board_height; i++)
+	{
+		for(int j = 0; j < board_length; j++)
+		{
+			block_array[i][j] = 0;
+			block_render(j, i, 1, 0);
+		}
+	}	
+
+	return ((int**)(&block_array));
 }
 
 /* Renders a given tetris block on the screen.
@@ -153,8 +184,8 @@ int tetris_block_render(tetris_block * block, int erase)
 	//Write each block on to the LCD
 	for(int i = 0; i < 4; i++)
 	{
-		ece210_lcd_draw_rectangle(block->blocks[i].x * BLOCK_LENGTH + 20,
-				BLOCK_LENGTH,block->blocks[i].y * BLOCK_HEIGHT, BLOCK_HEIGHT, color);
+		ece210_lcd_draw_rectangle(block->blocks[i].x * block_length + board_offset_x,
+				block_length,block->blocks[i].y * block_height, block_height, color);
 	}
 	
 	return color;
@@ -250,7 +281,7 @@ int tetris_block_move(tetris_block * block, unsigned char direction)
 			//Special Case: check for out of bounds
 			for(int i = 0; i < 4; i++)
 			{
-				if((block -> blocks[i].y + 1) >= BOARD_HEIGHT)
+				if((block -> blocks[i].y + 1) >= board_height)
 				{
 				return 1;
 				}
@@ -313,7 +344,7 @@ int tetris_block_move(tetris_block * block, unsigned char direction)
 			//Special Case: check for out of bounds
 			for(int i = 0; i < 4; i++)
 			{
-				if((block -> blocks[i].x + 1) >= BOARD_LENGTH)
+				if((block -> blocks[i].x + 1) >= board_length)
 				{
 				return 1;
 				}
@@ -532,9 +563,9 @@ int tetris_block_rotate(tetris_block * block, unsigned char clockwise)
 	}
 	
 	// Test if out of bounds
-	if((new_y1 >= 0) && (new_y1 < BOARD_HEIGHT) && (new_x1 >= 0) && (new_x1 < BOARD_LENGTH) &&
-		 (new_y2 >= 0) && (new_y2 < BOARD_HEIGHT) && (new_x2 >= 0) && (new_x2 < BOARD_LENGTH) &&
-		 (new_y3 >= 0) && (new_y3 < BOARD_HEIGHT) && (new_x3 >= 0) && (new_x3 < BOARD_LENGTH)
+	if((new_y1 >= 0) && (new_y1 < board_height) && (new_x1 >= 0) && (new_x1 < board_length) &&
+		 (new_y2 >= 0) && (new_y2 < board_height) && (new_x2 >= 0) && (new_x2 < board_length) &&
+		 (new_y3 >= 0) && (new_y3 < board_height) && (new_x3 >= 0) && (new_x3 < board_length)
 		)
 	{
 	
@@ -567,7 +598,7 @@ void block_trickle_down(int start_row)
 {
 	for(int curr_row = start_row; curr_row > 0; curr_row--)
 	{
-		for(int curr_col = 0; curr_col < BOARD_LENGTH; curr_col++)
+		for(int curr_col = 0; curr_col < board_length; curr_col++)
 		{
 			
 			if(block_array[curr_row - 1][curr_col])
@@ -609,12 +640,12 @@ int clear_completed_rows()
 	//check for matches
 	int is_completed_row;
 	int score_returnable = 0;
-	for(int i = 0; i < BOARD_HEIGHT; i++)
+	for(int i = 0; i < board_height; i++)
 	{
 		is_completed_row = 1;
 		
 		// iterate through a row see if it is completed
-		for(int j = 0; j < BOARD_LENGTH; j++)
+		for(int j = 0; j < board_length; j++)
 		{
 			if(block_array[i][j] == 0)
 			{
@@ -638,9 +669,9 @@ int clear_completed_rows()
  */
 void draw_walls()
 {
-	ece210_lcd_draw_rectangle(0, 20, 0, 320, LCD_COLOR_GRAY);
-	ece210_lcd_draw_rectangle(220, 20, 0, 320, LCD_COLOR_GRAY);
-	ece210_lcd_draw_rectangle(20, 200, 300, 20, LCD_COLOR_GRAY);
+	ece210_lcd_draw_rectangle(0, board_offset_x, 0, 320, LCD_COLOR_GRAY);
+	ece210_lcd_draw_rectangle(240 - board_offset_x, board_offset_x, 0, 320, LCD_COLOR_GRAY);
+	ece210_lcd_draw_rectangle(board_offset_x, 240 - 2*board_offset_x, 320 - 2 * block_height, 2*block_height, LCD_COLOR_GRAY);
 }
 
 /* Converts an unsigned integer type into a char* cstring
@@ -687,4 +718,16 @@ char * unsigned_to_string(unsigned int i)
 void delete_string(char * string)
 {
 	free(string);
+}
+
+/* Frees up any memory used for the given tetris board.
+ */
+void free_board(int ** board)
+{
+	for(int i = 0; i < board_height; i++)
+	{
+		free(*(block_array + i));
+	}
+	
+	free(block_array);
 }
