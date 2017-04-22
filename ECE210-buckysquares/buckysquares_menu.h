@@ -31,9 +31,12 @@ int update_menu(void);
  */
 int is_connected(int id);
 
-/*
- *
+/* Launches the singleplayer menu where the player can choose Difficulty settings
+ * or Board Size and then start a game.
  */
 void singleplayer_menu(void);
 
+/* Launches the multiplayer menu where the local player can specify the remote ID of the player
+ * that they wish to connect to and toggle other settings.
+ */
 void multiplayer_menu(void);

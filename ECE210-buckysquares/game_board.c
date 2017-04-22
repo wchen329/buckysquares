@@ -27,7 +27,7 @@ int board_offset_x = 0;
  *	int erase - flag 1 write black (or erase the block from the LCD) or 0 write a block of random color 
  *	int block_color - the color of the block to render. 0x0 is a random color unless erase is asserted then black is the color
  */
-void block_render(int x, int y, int erase, int block_color)
+int block_render(int x, int y, int erase, int block_color)
 {
 	int color;
 	
@@ -83,6 +83,7 @@ void block_render(int x, int y, int erase, int block_color)
 	
 	//Write one block on to the LCD
 	ece210_lcd_draw_rectangle(x * block_length + board_offset_x, block_length, y * block_height, block_height, color);
+	return color;
 }
 
 /* Initializes the tetris board to be empty
@@ -730,4 +731,58 @@ void free_board(int ** board)
 	}
 	
 	free(block_array);
+}
+
+/* Sends a specified amount of rows to the local players screen.
+ *
+ * Arguments accepted: rows_to_bombard - the number of rows to bombard the other player with
+ */
+void bombard_rows(int rows_to_bombard)
+{
+	if(rows_to_bombard == 0)
+		return;
+	
+	for(int curr_row = 0; curr_row < (board_height - rows_to_bombard); curr_row++)
+	{
+		for(int curr_col = 0; curr_col < board_length; curr_col++)
+		{
+			
+			if(block_array[curr_row + rows_to_bombard][curr_col])
+			{
+				block_array[curr_row][curr_col] = block_array[curr_row + rows_to_bombard][curr_col];
+				block_render(curr_col, curr_row, 0, block_array[curr_row][curr_col]);
+			}
+			
+			else
+			{
+				block_array[curr_row][curr_col] = 0;
+				block_render(curr_col, curr_row, 1, 0);
+			}
+		}
+	}
+	
+	int empty_seed;
+	int random_color;
+	
+	for(int curr_row = board_height - 1; curr_row > board_height - 1 - rows_to_bombard; curr_row--)
+	{
+		empty_seed = rand() % board_length;
+		
+		for(int curr_col = 0; curr_col < board_length; curr_col++)
+		{
+			
+			if(curr_col == empty_seed)
+			{
+				block_array[curr_row][curr_col] = 0;
+				block_render(curr_col, curr_row, 1, 0);
+			}
+			
+			else
+			{
+				random_color = block_render(curr_col, curr_row, 0, 0);
+				block_array[curr_row][curr_col] = random_color;
+				
+			}
+		}
+	}
 }

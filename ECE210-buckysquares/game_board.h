@@ -39,7 +39,7 @@ typedef struct
  *	int erase - flag 1 write black (or erase the block from the LCD) or 0 write a block of random color 
  *	int block_color - the color of the block to render. 0x0 is a random color unless erase is asserted then black is the color
  */
-void block_render(int x, int y, int erase, int block_color);
+int block_render(int x, int y, int erase, int block_color);
 
 /* Initializes the tetris board to be empty
  * (all zero values).
@@ -125,3 +125,9 @@ void delete_string(char * string);
 /* Frees up any memory used for the given tetris board.
  */
 void free_board(int ** board);
+
+/* Sends a specified amount of rows to the local players screen.
+ *
+ * Arguments accepted: rows_to_bombard - the number of rows to bombard the other player with
+ */
+void bombard_rows(int rows_to_bombard);

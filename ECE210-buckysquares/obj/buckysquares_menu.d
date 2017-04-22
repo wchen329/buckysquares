@@ -11,4 +11,5 @@
 .\obj\buckysquares_menu.o: C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include\cmsis_armcc.h
 .\obj\buckysquares_menu.o: C:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\system_TM4C123.h
 .\obj\buckysquares_menu.o: lab_buttons.h
+.\obj\buckysquares_menu.o: multiplayer.h
 .\obj\buckysquares_menu.o: buckysquares.h
