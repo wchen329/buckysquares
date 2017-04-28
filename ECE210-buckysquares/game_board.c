@@ -94,6 +94,7 @@ int ** init_board(int board_size)
 {
 	switch(board_size)
 	{
+		
 		case 0:
 			block_height = 16;
 			block_length = 16;
@@ -105,6 +106,13 @@ int ** init_board(int board_size)
 			block_length = 10;
 			board_height = 30;
 			board_length = 20;
+			break;
+		case 2:
+			block_height = 20;
+			block_length = 20;
+			board_height = 14;
+			board_length = 8;
+			
 			break;
 	}
 	
@@ -127,6 +135,21 @@ int ** init_board(int board_size)
 	}	
 
 	return ((int**)(&block_array));
+}
+
+/* Clears the tetris board without reinitializing
+ * another board in memory.
+ */
+void clear_board()
+{
+	for(int i = 0; i < board_height; i++)
+	{
+		for(int j = 0; j < board_length; j++)
+		{
+			block_array[i][j] = 0;
+			block_render(j, i, 1, 0);
+		}
+	}
 }
 
 /* Renders a given tetris block on the screen.

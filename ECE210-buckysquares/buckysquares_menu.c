@@ -53,15 +53,19 @@ void singleplayer_menu()
 	int old_difficulty = 1;
 	int board_size = 0;
 	int old_board_size = 0;
+	int power_plays = 0;
+	int old_power_plays = 0;
 	char has_used_ps2 = 0;
 	
 	char * text_difficulty = "Difficulty: Normal";
 	char * text_board_size = "Board Size: Normal";
+	char * text_power_plays = "Power Plays: Off";
 	
 	lcd_clear();
 	ece210_lcd_print_string("Singleplayer Setup...", 230, 20, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	ece210_lcd_print_string(text_difficulty, 220, 80, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
 	ece210_lcd_print_string(text_board_size, 220, 100, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
+	ece210_lcd_print_string(text_power_plays, 220, 120, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
 	ece210_lcd_print_string("(R) Play", 75, 300, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	ece210_lcd_print_string("(L) Back", 230, 300, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	
@@ -74,7 +78,10 @@ void singleplayer_menu()
 		if(difficulty < 0) difficulty = 4; if(difficulty > 4) {difficulty = 0;}
 		if(choice == 1 && ece210_ps2_read_position() == PS2_LEFT && !has_used_ps2) {board_size--; has_used_ps2 = 1;}
 		if(choice == 1 && ece210_ps2_read_position() == PS2_RIGHT && !has_used_ps2) {board_size++; has_used_ps2 = 1;}
-		if(board_size < 0) board_size = 1; if(board_size > 1) {board_size = 0;}
+		if(board_size < 0) board_size = 2; if(board_size > 2) {board_size = 0;}
+		if(choice == 2 && ece210_ps2_read_position() == PS2_LEFT && !has_used_ps2) {power_plays--; has_used_ps2 = 1;}
+		if(choice == 2 && ece210_ps2_read_position() == PS2_RIGHT && !has_used_ps2) {power_plays++; has_used_ps2 = 1;}
+		if(power_plays < 0) power_plays = 1; if(power_plays > 1) {power_plays = 0;}
 		
 		switch(difficulty)
 		{
@@ -99,11 +106,23 @@ void singleplayer_menu()
 		{
 			case 0:
 				text_board_size = "Board Size: Normal";
-				board_size = 0;
 				break;
 			case 1:
 				text_board_size = "Board Size: Large";
-				board_size = 1;
+				break;
+			case 2:
+				text_board_size = "Board Size: Small";
+				break;
+		}
+		
+		switch(power_plays)
+		{
+			case 0:
+				text_power_plays = "Power Plays: Off";
+				break;
+			
+			case 1:
+				text_power_plays = "Power Plays: On";
 				break;
 		}
 		
@@ -121,18 +140,43 @@ void singleplayer_menu()
 			old_board_size = board_size;
 		}
 		
-		if(choice == 0 && ece210_ps2_read_position() == PS2_DOWN)
+		if(old_power_plays != power_plays)
+		{
+			ece210_lcd_draw_rectangle(0, 240, 120, 20, LCD_COLOR_BLACK);
+			ece210_lcd_print_string(text_power_plays, 220, 120, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
+			old_power_plays = power_plays;
+		}
+		
+		if(choice == 0 && ece210_ps2_read_position() == PS2_DOWN && !has_used_ps2)
 		{
 			ece210_lcd_print_string(text_difficulty, 220, 80, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
 			ece210_lcd_print_string(text_board_size, 220, 100, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
 			choice = 1;
+			has_used_ps2 = 1;
 		}
 	
-		if(choice == 1 && ece210_ps2_read_position() == PS2_UP)
+		if(choice == 1 && ece210_ps2_read_position() == PS2_UP && !has_used_ps2)
 		{
 			ece210_lcd_print_string(text_difficulty, 220, 80, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
 			ece210_lcd_print_string(text_board_size, 220, 100, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
 			choice = 0;
+			has_used_ps2 = 1;
+		}
+		
+		if(choice == 1 && ece210_ps2_read_position() == PS2_DOWN && !has_used_ps2)
+		{
+			ece210_lcd_print_string(text_board_size, 220, 100, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
+			ece210_lcd_print_string(text_power_plays, 220, 120, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
+			choice = 2;
+			has_used_ps2 = 1;
+		}
+		
+		if(choice == 2 && ece210_ps2_read_position() == PS2_UP && !has_used_ps2)
+		{
+			ece210_lcd_print_string(text_board_size, 220, 100, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
+			ece210_lcd_print_string(text_power_plays, 220, 120, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
+			choice = 1;
+			has_used_ps2 = 1;
 		}
 		
 		while(ece210_ps2_read_position() != PS2_CENTER && has_used_ps2);
@@ -143,7 +187,7 @@ void singleplayer_menu()
 			if(btn_right_pressed())
 			{
 				next = 1;
-				launch_tetris_game(0, difficulty, board_size, 1, 1);
+				launch_tetris_game(0, difficulty, board_size, 1, 1, power_plays);
 			}
 		
 			else if(btn_left_pressed())
@@ -162,14 +206,16 @@ void singleplayer_menu()
 void multiplayer_menu()
 {
 	
-	char local_id[3] = {'0', '0', '0'};
-	char remote_id[3] = {'0', '0', '0'};
+	char local_id[3] = {'0', '0', '1'};
+	char remote_id[3] = {'0', '0', '1'};
 	int allow_bombard = 1;
 	int sudden_death = 1;
+	int unique = 1;
+	int menu_active = 1;
 	char choice = 0;
 	char ps2_inactive = 0;
-	char * text_bombard = "Allow Bombarding: Yes";
-	char * text_sudden_death = "Sudden Death: Yes";
+	char * text_bombard = "Allow Bombarding: On";
+	char * text_sudden_death = "Sudden Death: On";
 	
 	lcd_clear();
 	ece210_lcd_print_string("Multiplayer Setup...", 230, 20, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
@@ -182,7 +228,7 @@ void multiplayer_menu()
 	ece210_lcd_print_string("(R) Start", 75, 300, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	ece210_lcd_print_string("(L) Back", 230, 300, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	
-	while(!btn_left_pressed()){
+	while(menu_active){
 	
 		if(choice == 0 && ece210_ps2_read_position() == PS2_DOWN && !ps2_inactive)
 		{
@@ -249,7 +295,7 @@ void multiplayer_menu()
 			if(local_id[1] > '9'){ local_id[0]++; local_id[1] = '0'; }
 			if(local_id[0] == '2' && local_id[1] == '5' && local_id[2] > '5')
 			{
-				local_id[0] = '0'; local_id[1] = '0'; local_id[2] = '0';
+				local_id[0] = '0'; local_id[1] = '0'; local_id[2] = '1';
 			}
 		
 		ece210_lcd_print_string(local_id, 200, 100, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
@@ -259,7 +305,7 @@ void multiplayer_menu()
 		if(choice == 0 && ece210_ps2_read_position() == PS2_LEFT && !ps2_inactive)
 		{
 			local_id[2]--;
-			if(local_id[0] == '0' && local_id[1] == '0' && local_id[2] < '0')
+			if(local_id[0] == '0' && local_id[1] == '0' && local_id[2] == '0')
 			{
 				local_id[0] = '2'; local_id[1] = '5'; local_id[2] = '5';
 			}
@@ -282,7 +328,7 @@ void multiplayer_menu()
 			if(remote_id[1] > '9'){ remote_id[0]++; remote_id[1] = '0'; }
 			if(remote_id[0] == '2' && remote_id[1] == '5' && remote_id[2] > '5')
 			{
-				remote_id[0] = '0'; remote_id[1] = '0'; local_id[2] = '0';
+				remote_id[0] = '0'; remote_id[1] = '0'; remote_id[2] = '1';
 			}
 		
 		ece210_lcd_print_string(remote_id, 200, 140, LCD_COLOR_CYAN, LCD_COLOR_BLACK);
@@ -292,7 +338,7 @@ void multiplayer_menu()
 		if(choice == 1 && ece210_ps2_read_position() == PS2_LEFT && !ps2_inactive)
 		{
 			remote_id[2]--;
-			if(remote_id[0] == '0' && remote_id[1] == '0' && remote_id[2] < '0')
+			if(remote_id[0] == '0' && remote_id[1] == '0' && remote_id[2] == '0')
 			{
 				remote_id[0] = '2'; remote_id[1] = '5'; remote_id[2] = '5';
 			}
@@ -312,14 +358,14 @@ void multiplayer_menu()
 			switch(allow_bombard)
 			{
 				case 0:
-					text_bombard = "Allow Bombarding: Yes";
+					text_bombard = "Allow Bombarding: On";
 					allow_bombard = 1;
 					ece210_lcd_draw_rectangle(0, 240, 160, 20, LCD_COLOR_BLACK);
 					ece210_lcd_print_string(text_bombard, 220, 160, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
 					break;
 				
 				case 1:
-					text_bombard = "Allow Bombarding: No";
+					text_bombard = "Allow Bombarding: Off";
 					allow_bombard = 0;
 					ece210_lcd_draw_rectangle(0, 240, 160, 20, LCD_COLOR_BLACK);
 					ece210_lcd_print_string(text_bombard, 220, 160, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
@@ -333,14 +379,14 @@ void multiplayer_menu()
 			switch(sudden_death)
 			{
 				case 0:
-					text_sudden_death = "Sudden Death: Yes";
+					text_sudden_death = "Sudden Death: On";
 					sudden_death = 1;
 					ece210_lcd_draw_rectangle(0, 240, 180, 20, LCD_COLOR_BLACK);
 					ece210_lcd_print_string(text_sudden_death, 220, 180, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
 					break;
 				
 				case 1:
-					text_sudden_death = "Sudden Death: No";
+					text_sudden_death = "Sudden Death: Off";
 					sudden_death = 0;
 					ece210_lcd_draw_rectangle(0, 240, 180, 20, LCD_COLOR_BLACK);
 					ece210_lcd_print_string(text_sudden_death, 220, 180, LCD_COLOR_CYAN, LCD_COLOR_BLUE2);
@@ -351,21 +397,47 @@ void multiplayer_menu()
 		while(ece210_ps2_read_position() != PS2_CENTER);
 		ps2_inactive = 0;
 		
+		if(btn_left_pressed() && AlertButtons)
+		{
+				menu_active = 0;
+		}
+		
 		if(btn_right_pressed() && AlertButtons)
 		{
 			AlertButtons = 0;
 			char remote_id_num = remote_id[2]-'0' + (remote_id[1] - '0')*10 + (remote_id[0] - '0') * 100;
 			char local_id_num = local_id[2] - '0' + (local_id[1] - '0') * 10 + (local_id[0] - '0') * 100;
-			if(!multiplayer_init(local_id_num, remote_id_num, allow_bombard, sudden_death))
+			
+			if(remote_id_num == local_id_num)
 			{
-				ece210_lcd_print_string("Could not connect.", 220, 240, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+				ece210_lcd_print_string("XXXXXXXXXXXXXXXXXXXX.", 220, 240, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
+				ece210_lcd_print_string("IDs must be unique.", 220, 240, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+				unique = 0;
 			}
 			
-			else
+			else unique = 1;
+			
+			if(!unique)
 			{
-				launch_tetris_game(1, 1, 0, sudden_death, allow_bombard);
-				while(!btn_right_pressed());
-				return;
+				ece210_wireless_init(0,0);
+			}
+			
+			if(unique)
+			{
+			
+				if(!multiplayer_init(local_id_num, remote_id_num, allow_bombard, sudden_death))
+				{
+					ece210_lcd_print_string("XXXXXXXXXXXXXXXXXXXX.", 220, 240, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
+					ece210_lcd_print_string("Could not connect.", 220, 240, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+					ece210_wireless_init(0,0);
+				}
+			
+				else
+				{
+						launch_tetris_game(1, 1, 0, sudden_death, allow_bombard, 0);
+						while(!btn_right_pressed());
+						return;
+				}
 			}
 		}
 	}
@@ -385,6 +457,7 @@ int prompt_menu()
 	ece210_lcd_print_string("(R) Next", 75, 300, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	int chosen = -1;
 	int choice = 0;
+	ece210_wireless_init(0,0);
 	while(chosen < 0)
 	{
 		if(btn_right_pressed())

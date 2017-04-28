@@ -439,6 +439,16 @@
               <FileType>5</FileType>
               <FilePath>.\multiplayer.h</FilePath>
             </File>
+            <File>
+              <FileName>power_play.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\power_play.c</FilePath>
+            </File>
+            <File>
+              <FileName>power_play.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\power_play.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

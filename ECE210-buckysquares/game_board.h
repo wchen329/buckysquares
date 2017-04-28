@@ -3,6 +3,9 @@
 // Description:	Library for functions pertaining to the representation
 //							of the tetris game board.
 
+#ifndef __GAME_BOARD_H__
+#define __GAME_BOARD_H__
+
 extern int block_height;		// height of single tetris block in pixels
 extern int block_length;		// length of single tetris block in pixels
 extern int block_start_x;		// the starting x position of a tetris block
@@ -48,6 +51,11 @@ int block_render(int x, int y, int erase, int block_color);
  *	int board_size - a flag indicating how big the tetris board should be
  */
 int ** init_board(int board_size);
+
+/* Clears the tetris board without reinitializing
+ * another board in memory.
+ */
+void clear_board(void);
 
 /* Renders a given tetris block on the screen.
  * Renders the block in a random ROYGBV color.
@@ -131,3 +139,5 @@ void free_board(int ** board);
  * Arguments accepted: rows_to_bombard - the number of rows to bombard the other player with
  */
 void bombard_rows(int rows_to_bombard);
+
+#endif

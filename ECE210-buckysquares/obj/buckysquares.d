@@ -14,3 +14,4 @@
 .\obj\buckysquares.o: game_board.h
 .\obj\buckysquares.o: multiplayer.h
 .\obj\buckysquares.o: buckysquares_menu.h
+.\obj\buckysquares.o: power_play.h

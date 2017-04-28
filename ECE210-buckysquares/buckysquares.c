@@ -9,6 +9,7 @@
 #include "game_board.h"
 #include "multiplayer.h"
 #include "buckysquares_menu.h"
+#include "power_play.h"
 
 #define EASY_DELAY 16
 #define NORMAL_DELAY 8
@@ -19,7 +20,7 @@
 tetris_block current_state;
 
 
-int multiplayer_process_data(int sudden_death)
+int multiplayer_process_data()
 {
 	int rows_to_bombard = NULL;
 	int multiplayer_flags = NULL;
@@ -31,11 +32,8 @@ int multiplayer_process_data(int sudden_death)
 	
 	//If lost, stop game declare winner
 	if((multiplayer_flags & (6144)) >> 11 == 2)
-	{		
-			if(sudden_death)
-			{
+	{
 				return 1;
-			}
 	}
 				
 	rows_to_bombard = (multiplayer_flags >> 8) & 7;
@@ -50,13 +48,22 @@ int multiplayer_process_data(int sudden_death)
  *			int is_online - 0 game is singleplayer, 1 game is multiplayer
  *			int difficulty - dictates drop speed
  *			int board_size - dictates how large the tetris board is drawn
- *			int sudden_death - dictates whether game ends when one player dies or when both die
- *			int allow_bombarding - allow sending other players rows
+ *			int sudden_death - dictates whether game ends when one player dies or when both die (multiplayer only)
+ *			int allow_bombarding - allow sending other players rows (multiplayer only)
  *			int local_id - specifies the multiplayer id of the player, autos to 0 if singleplayer
- *
+ *			int pp - flag whether or not power plays are allowed or not (singleplayer only)
  */
-void launch_tetris_game(int is_online, int difficulty, int board_size, int sudden_death, int allow_bombarding)
+void launch_tetris_game(int is_online, int difficulty, int board_size, int sudden_death, int allow_bombarding, int pp)
 {
+	//Singleplayer Only
+	int pp_count = 0;
+	
+	if(pp)
+	{
+		ece210_audio_init(200);
+		ece210_audio_set_comparator_threshold(20);
+	}
+		
 	//Multiplayer only
 	int has_won = 0;
 	int rows_to_bombard = 0;
@@ -68,6 +75,7 @@ void launch_tetris_game(int is_online, int difficulty, int board_size, int sudde
 	tetris_block_generate(&current_state, block_start_x, 0);
 	int counter;
 	int max_counter = 6;
+	int rows_cleared;
 	unsigned score = 0;
 	
 	switch(difficulty)
@@ -93,17 +101,19 @@ void launch_tetris_game(int is_online, int difficulty, int board_size, int sudde
 		
 		counter = 0;
 		
-		if(is_online){
-			
-			if(!allow_bombarding) rows_to_bombard = 0;
-			if(rows_to_bombard != 0)
-				if(send_status(local_id_wireless, rows_to_bombard, 0, has_won))
-					rows_to_bombard = 0;
-		
-		}
-		
 		while(counter < max_counter)
 		{
+			if(is_online && has_won != 2)
+			{
+				if(has_won != 1)
+					has_won = multiplayer_process_data();
+			}
+			
+			if(pp)
+			{
+				pp_count = attempt_pp_clear(pp_count, &current_state);
+			}
+			
 			if(AlertButtons)
 			{
 				AlertButtons = 0;
@@ -126,25 +136,54 @@ void launch_tetris_game(int is_online, int difficulty, int board_size, int sudde
 			if(current_state.blocks[0].x == block_start_x && current_state.blocks[0].y == 0)
 			{
 				game_is_on = 0;
-				while(ece210_wireless_data_avaiable())
-					ece210_wireless_get();
-				if(has_won != 1)
-					has_won = 2;
 					if(is_online)
 					{
-						while(!send_status(local_id_wireless, rows_to_bombard, 0, has_won));
+						if(has_won == 0)
+							while(ece210_wireless_data_avaiable())
+								has_won = multiplayer_process_data();
+						if(has_won != 1)
+						{
+							has_won = 2;
+							ece210_lcd_print_string("Sending information", 200, 100, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+							ece210_lcd_print_string("to opponent...", 170, 120, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+							while(!send_status(local_id_wireless, rows_to_bombard, 0, has_won))
+							{
+								ece210_wait_mSec(1000);
+							}
+						}
 					}
 			}
 			
 			if(game_is_on)
 			{
 				tetris_block_place(&current_state);
-				rows_to_bombard = clear_completed_rows() / 10;
-				score += (rows_to_bombard * 10);
+				rows_cleared = clear_completed_rows() / 10;
+				rows_to_bombard += rows_cleared;
+				score += (rows_cleared * 10);
+				
+				if(pp)
+				{
+					pp_count++;
+					pp_update_led(pp_count);
+				}
+				
 				tetris_block_generate(&current_state, block_start_x, 0);
-				if(is_online && has_won != 2) 
-					has_won = multiplayer_process_data(sudden_death);
-				if(has_won == 1) game_is_on = 0;
+				
+				if(has_won == 1 && sudden_death)
+				{
+					game_is_on = 0;
+				}
+					
+				// Bombard, if needed
+				if(is_online){
+			
+					if(!allow_bombarding) rows_to_bombard = 0;
+					if(rows_to_bombard != 0)
+					{
+						if(send_status(local_id_wireless, rows_to_bombard, 0, has_won))
+							rows_to_bombard = 0;
+					}
+				}
 			}
 		}
 	}
@@ -170,22 +209,17 @@ void launch_tetris_game(int is_online, int difficulty, int board_size, int sudde
 		while(!verify_score(opp_score))
 		{
 			send_score(score);
+			ece210_wait_mSec(1000);
 			
 			if(ece210_wireless_data_avaiable())
 				opp_score = ece210_wireless_get();
 		}
 		
 		while(!send_score(score))
-			send_score(score);
-		
-		/*while(ece210_wireless_data_avaiable())
 		{
+			ece210_wait_mSec(1000);
 			send_score(score);
-			send_status(local_id_wireless, 0, 0, 0);
-			if(!verify_score(ece210_wireless_get()))
-				break;
-		}*/
-		
+		}
 		send_score(score);
 		
 		char * opp_score_str = unsigned_to_string(receive_score(opp_score));

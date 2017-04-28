@@ -13,8 +13,9 @@ unsigned char remote_id_wireless;
 
 /* Sends important data to another player in the form of a 32
  * bit integer. What the 32 bit flags mean (from low endian).
+ * Returns 0 on failure, non-zero value on successful transmission
  *
- * bits 0-7 : the ID of the player sending (range: 0 - 255)
+ * bits 0-7 : the ID of the player sending (range: 1 - 255)
  * bits 8-10: the amount of rows the player is trying to send
  * bits 11-12: has the player sending lost the game? win = 1, lost = 2
  * bit 13: player is available and can connect
@@ -79,21 +80,18 @@ int multiplayer_init(unsigned char local_id, unsigned char remote_id, int bombar
 	ece210_wireless_init(local_id_wireless, remote_id_wireless);
 	ece210_lcd_print_string("Sending test...", 220, 240, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 	
-	int send_success = send_status(local_id, 0, 0, 0);																							 
+	int send_success = 0;																							 
 	
-	if(send_success)
+	while(!send_success)
 	{
+		send_success = send_status(local_id, 0, 0, 0);
 		ece210_lcd_print_string("Waiting for other player...", 220, 240, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
 		
-		while(ece210_wireless_data_avaiable() == 0)
+		if(btn_left_pressed())
 		{
-			if(btn_left_pressed())
-			{
-				ece210_lcd_print_string("Cancelled.", 220, 240, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
-				return 0;
-			}
+			AlertButtons = 0;
+			return 0;
 		}
-	
 	}
 	
 	return (send_success);
